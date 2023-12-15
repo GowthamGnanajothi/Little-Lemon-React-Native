@@ -1,8 +1,127 @@
-import { View, StyleSheet, Text, Image } from 'react-native';
+import { View, StyleSheet, Text, Image, SectionList, SafeAreaView, KeyboardAvoidingView } from 'react-native';
 import HeroImage from '../assets/hero_image.png';
 import { Searchbar } from 'react-native-paper';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import debounce from 'lodash.debounce';
+import {
+    createTable,
+    getMenuItems,
+    saveMenuItems,
+    filterByQueryAndCategories,
+  } from '../database';
+import Filters from '../components/Filters';
+import { getSectionListData, useUpdateEffect } from '../utils/utils';
+
+const API_URL =
+  'https://raw.githubusercontent.com/Meta-Mobile-Developer-PC/Working-With-Data-API/main/menu-items-by-category.json';
+const sections = ['Appetizers', 'Salads', 'Beverages'];
+
+const Item = ({ title, price }) => (
+    <View style={filterSectionStyles.item}>
+      <Text style={filterSectionStyles.title}>{title}</Text>
+      <Text style={filterSectionStyles.title}>${price}</Text>
+    </View>
+  );
 
 export default function HomeScreen() {
+    const [data, setData] = useState([]);
+    const [searchBarText, setSearchBarText] = useState('');
+    const [query, setQuery] = useState('');
+    const [filterSelections, setFilterSelections] = useState(
+        sections.map(() => false)
+    );
+
+    const fetchData = async() => {
+        // Implement this function
+    
+        // Fetch the menu from the API_URL endpoint. You can visit the API_URL in your browser to inspect the data returned
+        // The category field comes as an object with a property called "title". You just need to get the title value and set it under the key "category".
+        // So the server response should be slighly transformed in this function (hint: map function) to flatten out each menu item in the array,
+    
+        try {
+          const response = await fetch(API_URL);
+          const json = await response.json();
+          const transformedData = json.menu.map((item) => {
+            return {
+              id: item.id,
+              price: item.price,
+              title: item.title,
+              category: item.category.title,
+            }
+          });
+    
+          // console.log('transformed data: ',transformedData);
+          return transformedData;
+        } catch (e) {
+          console.error(e);
+        }
+    
+        return [];
+    }
+
+    useEffect(() => {
+        (async () => {
+          try {
+            await createTable();
+            let menuItems = await getMenuItems();
+    
+            // The application only fetches the menu data once from a remote URL
+            // and then stores it into a SQLite database.
+            // After that, every application restart loads the menu from the database
+            if (!menuItems.length) {
+              const menuItems = await fetchData();
+              saveMenuItems(menuItems);
+            }
+    
+            const sectionListData = getSectionListData(menuItems);
+            setData(sectionListData);
+          } catch (e) {
+            // Handle error
+            Alert.alert(e.message);
+          }
+        })();
+    }, []);
+
+    useUpdateEffect(() => {
+        (async () => {
+          const activeCategories = sections.filter((s, i) => {
+            // If all filters are deselected, all categories are active
+            if (filterSelections.every((item) => item === false)) {
+              return true;
+            }
+            return filterSelections[i];
+          });
+          try {
+            const menuItems = await filterByQueryAndCategories(
+              query,
+              activeCategories
+            );
+            const sectionListData = getSectionListData(menuItems);
+            setData(sectionListData);
+          } catch (e) {
+            console.log("sqlerr: ===> ", e.message);
+            Alert.alert(e.message);
+          }
+        })();
+    }, [filterSelections, query]);
+
+    const lookup = useCallback((q) => {
+        setQuery(q);
+    }, []);
+    
+    const debouncedLookup = useMemo(() => debounce(lookup, 500), [lookup]);
+    
+    const handleSearchChange = (text) => {
+        setSearchBarText(text);
+        debouncedLookup(text);
+    };
+    
+    const handleFiltersChange = async (index) => {
+        const arrayCopy = [...filterSelections];
+        arrayCopy[index] = !filterSelections[index];
+        setFilterSelections(arrayCopy);
+    };
+
     return (
         <View style={homeScreenStyles.homeScreenContainer}>
             <View style={homeScreenStyles.heroSectionContainer}>
@@ -19,12 +138,39 @@ export default function HomeScreen() {
                 <Searchbar
                     placeholder="Search"
                     placeholderTextColor="white"
+                    onChangeText={handleSearchChange}
+                    value={searchBarText}
                     style={heroSectionStyles.searchBar}
                     iconColor="white"
                     inputStyle={{ color: 'white' }}
                     elevation={0}
                 />
             </View>
+            <View style={homeScreenStyles.filterSectionContainer}>
+                <Text style={filterSectionStyles.headerLabel}>
+                    ORDER FOR DELIVERY
+                </Text>
+                <Filters
+                    selections={filterSelections}
+                    onChange={handleFiltersChange}
+                    sections={sections}
+                />
+            </View>
+
+            <View style={homeScreenStyles.menuListContainer}>
+                <SectionList
+                    style={filterSectionStyles.sectionList}
+                    sections={data}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => (
+                    <Item title={item.title} price={item.price} />
+                    )}
+                    renderSectionHeader={({ section: { title } }) => (
+                    <Text style={filterSectionStyles.header}>{title}</Text>
+                    )}
+                />
+            </View>
+            
         </View>
     );
 }
@@ -32,14 +178,24 @@ export default function HomeScreen() {
 const homeScreenStyles = StyleSheet.create({
     homeScreenContainer: {
         flex: 1,
+        flexDirection: 'column',
     },
     heroSectionContainer: {
         flex: 0.42,
         flexDirection: 'column',
         flexWrap: 'wrap',
         backgroundColor: '#333333',
-        padding: 20,
+        padding: 16,
     },
+    filterSectionContainer: {
+        flex: 0.17,
+        flexDirection: 'column',
+        flexWrap: 'wrap',
+    },
+    menuListContainer: {
+        flex: 0.41,
+        flexDirection: 'column',
+    }
 });
 
 const heroSectionStyles = StyleSheet.create( {
@@ -78,4 +234,35 @@ const heroSectionStyles = StyleSheet.create( {
         shadowRadius: 0,
         shadowOpacity: 0,
       },
+});
+
+const filterSectionStyles = StyleSheet.create( {
+    headerLabel: {
+        textAlign:'left',
+        fontSize: 24,
+        fontWeight: 'bold',
+        paddingTop: 8,
+        paddingHorizontal: 16,
+    },
+    sectionList: {
+        flex: 1,
+    },
+    item: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 16,
+        paddingHorizontal: 24,
+    },
+    header: {
+        fontSize: 24,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        color: '#FBDABB',
+        backgroundColor: '#495E57',
+    },
+    title: {
+        fontSize: 20,
+        color: '#F4CE14',
+    },
 });
