@@ -18,7 +18,7 @@ const Filters = ({ onChange, selections, sections }) => {
             borderColor: 'white',
           }}>
           <View>
-            <Text style={{ color: selections[index] ? 'black' : 'white' }}>
+            <Text style={{ color: selections[index] ? 'black' : 'white', fontSize: 16 }}>
               {section}
             </Text>
           </View>

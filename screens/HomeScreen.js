@@ -122,8 +122,8 @@ export default function HomeScreen() {
         setFilterSelections(arrayCopy);
     };
 
-    return (
-        <View style={homeScreenStyles.homeScreenContainer}>
+    const HeaderContent = () => (
+        <View>
             <View style={homeScreenStyles.heroSectionContainer}>
                 <Text style={heroSectionStyles.labelHeader}>
                     Little Lemon
@@ -146,7 +146,7 @@ export default function HomeScreen() {
                     elevation={0}
                 />
             </View>
-            <View style={homeScreenStyles.filterSectionContainer}>
+            <View>
                 <Text style={filterSectionStyles.headerLabel}>
                     ORDER FOR DELIVERY
                 </Text>
@@ -157,45 +157,35 @@ export default function HomeScreen() {
                 />
             </View>
 
-            <View style={homeScreenStyles.menuListContainer}>
-                <SectionList
-                    style={filterSectionStyles.sectionList}
-                    sections={data}
-                    keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => (
-                    <Item title={item.title} price={item.price} />
-                    )}
-                    renderSectionHeader={({ section: { title } }) => (
-                    <Text style={filterSectionStyles.header}>{title}</Text>
-                    )}
-                />
-            </View>
-            
         </View>
+    );
+
+    return (
+        <SafeAreaView style={homeScreenStyles.homeScreenContainer}>
+            <SectionList
+                style={filterSectionStyles.sectionList}
+                sections={data}
+                keyExtractor={(item) => item.id}
+                ListHeaderComponent={<HeaderContent/>}
+                renderItem={({ item }) => (
+                <Item title={item.title} price={item.price} />
+                )}
+                renderSectionHeader={({ section: { title } }) => (
+                <Text style={filterSectionStyles.header}>{title}</Text>
+                )}
+            />
+        </SafeAreaView>
     );
 }
 
 const homeScreenStyles = StyleSheet.create({
     homeScreenContainer: {
         flex: 1,
-        flexDirection: 'column',
     },
     heroSectionContainer: {
-        flex: 0.42,
-        flexDirection: 'column',
-        flexWrap: 'wrap',
         backgroundColor: '#333333',
         padding: 16,
     },
-    filterSectionContainer: {
-        flex: 0.17,
-        flexDirection: 'column',
-        flexWrap: 'wrap',
-    },
-    menuListContainer: {
-        flex: 0.41,
-        flexDirection: 'column',
-    }
 });
 
 const heroSectionStyles = StyleSheet.create( {
@@ -255,14 +245,16 @@ const filterSectionStyles = StyleSheet.create( {
         paddingHorizontal: 24,
     },
     header: {
-        fontSize: 24,
+        fontSize: 22,
         paddingVertical: 8,
         paddingHorizontal: 16,
         color: '#FBDABB',
         backgroundColor: '#495E57',
+        fontWeight: 'bold',
     },
     title: {
         fontSize: 20,
-        color: '#F4CE14',
-    },
+        color: '#333333',
+        fontWeight: '400',
+    }
 });
