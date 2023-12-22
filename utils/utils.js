@@ -70,3 +70,23 @@ export function useUpdateEffect(effect, dependencies = []) {
     }
   }, dependencies);
 }
+
+export const validateEmail = (email) => {
+    if (email?.length > 0) {
+        return email.match(
+            /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+        );
+    }
+    else {
+        return false;
+    }
+}
+
+export const validatePhone = (phone) => {
+    if (phone.length >= 10 && phone.length <= 13)
+     return true;
+    else
+     return false;
+}
+
+export const preferences = ["isLoggedIn", "email", "phone"];

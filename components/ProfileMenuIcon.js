@@ -8,7 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 
     return (
         <View>
-            <TouchableOpacity onPress={()=>navigation.navigate("Profile")}>
+            <TouchableOpacity onPress={()=>navigation.navigate("Profile", {isFirst: false})}>
                 <Image style={profileLogoStyles.logoImage} source={profileLogo} resizeMode='contain' /> 
             </TouchableOpacity>
         </View>

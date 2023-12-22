@@ -92,6 +92,7 @@ export default function HomeScreen() {
             return filterSelections[i];
           });
           try {
+            console.log(`filters query: ${query}, ${activeCategories}`);
             const menuItems = await filterByQueryAndCategories(
               query,
               activeCategories
@@ -160,12 +161,13 @@ export default function HomeScreen() {
         </View>
     );
 
+    // keyExtractor={(item, index) => index.toString()}
+    // keyExtractor={(item) => item.id}
     return (
-        <SafeAreaView style={homeScreenStyles.homeScreenContainer}>
+        <SafeAreaView style={homeScreenStyles.homeScreenContainer} forceInset={{top:'never'}}>
             <SectionList
-                style={filterSectionStyles.sectionList}
                 sections={data}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item, index) => index}
                 ListHeaderComponent={<HeaderContent/>}
                 renderItem={({ item }) => (
                 <Item title={item.title} price={item.price} />

@@ -9,6 +9,9 @@ export async function createTable() {
         tx.executeSql(
           'create table if not exists menuitems (id integer primary key not null, uuid text, title text, price text, category text);'
         );
+        tx.executeSql(
+          'create table if not exists userinfo (id integer primary key not null, email text, phonenumber varchar(30), firstname text, lastname text, offer integer, notification integer);'
+        );
       },
       reject,
       resolve
@@ -85,5 +88,37 @@ export async function filterByQueryAndCategories(query, activeCategories) {
       },
       reject
     );
+  });
+}
+
+export function insertUserInfo(userInfo) {
+  console.log(`Insert====Insert ${userInfo.email}. ${userInfo.phonenumber}. ${userInfo.firstName}. ${userInfo.lastName}. ${userInfo.offer}. ${userInfo.notification}`);
+  db.transaction((tx)=> {
+    tx.executeSql(
+      `insert into userinfo (email, phonenumber, firstname, lastname, offer, notification) values ('${userInfo.email}', '${userInfo.phonenumber}', '${userInfo.firstName}', '${userInfo.lastName}', '${userInfo.offer}', '${userInfo.notification}')`
+    )
+  });
+}
+
+export function updateUserInfo(userInfo) {
+  console.log(`Update====Update ${userInfo.email}. ${userInfo.phonenumber}. ${userInfo.firstName}. ${userInfo.lastName}. ${userInfo.offer}. ${userInfo.notification}`);
+  db.transaction((tx)=> {
+    tx.executeSql(
+      `update userinfo set phonenumber = '${userInfo.phonenumber}', firstname = '${userInfo.firstName}', 
+      lastname = '${userInfo.lastName}', offer = '${userInfo.offer}', notification = '${userInfo.notification}' 
+      where email = '${userInfo.email}'`
+    )
+  });
+}
+
+//select * from userinfo where email like '%${email}%'
+export async function getUserInfo(email) {
+  console.log("getUserInfo ",email);
+  return new Promise((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(`select * from userinfo where email like '%${email}%'`, [], (_, { rows }) => {
+        resolve(rows._array);
+      });
+    }, reject );
   });
 }
