@@ -19,12 +19,13 @@ const LoginScreen = ({ navigation }) => {
           try {
             await createTable();
             let isLoggedIn = await AsyncStorage.getItem('isLoggedIn');
-            if (isLoggedIn) {
+            if ((isLoggedIn!=null) && !isLoggedIn) {
                 navigation.reset({
                     index: 0,
                     routes: [{name: 'Home'}]
                 });
             }
+            
           } catch (e) {
             // Handle error
             Alert.alert(e.message);
