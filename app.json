@@ -21,10 +21,16 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.gowthamgnanajothi.LittleLemonReactNative1"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "9ae53989-e5a0-42ef-9cbf-95a7edb7a89d"
+      }
     }
   }
 }
